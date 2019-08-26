@@ -1,5 +1,7 @@
 import configparser
 import sys
+import re
+
 from pathlib import Path
 
 from matrix_client import errors
@@ -12,8 +14,7 @@ _config_string_section = "matrix"
 _config_string_username = "username"
 _config_string_password = "password"
 _config_string_url = "url"
-_config_string_rooms = "rooms"
-_config_strings = (_config_string_username, _config_string_password, _config_string_url, _config_string_rooms)
+_config_strings = (_config_string_username, _config_string_password, _config_string_url)
 
 _config_values = {}
 
@@ -45,12 +46,6 @@ def _read_config() -> str:
             _config_values[value] = _parser[_config_string_section][value]
             if _config_values[value] is None or len(_config_values[value]) == 0:
                 return "Empty value for " + value
-        # Transform room string into a set
-        room_set = set()
-        for room in _config_values[_config_string_rooms].split(","):
-            stripped = room.strip();
-            room_set.add(stripped)
-        _config_values[_config_string_rooms] = room_set;
     except KeyError as key_error:
         missing_key = key_error.args[0]
         return missing_key + " not set!"
@@ -76,12 +71,13 @@ def _send_message(the_room: Room, zabbix_subject: str, zabbix_message: str):
 
 
 def zabbix2matrixmain():
-    if len(sys.argv) != 3:
-        print("Usage: {} <subject> <message>".format(sys.argv[0]))
+    if len(sys.argv) != 4:
+        print("Usage: {} <room(s)> <subject> <message>".format(sys.argv[0]))
         exit(1)
 
-    the_alert = sys.argv[1]
-    the_message = sys.argv[2]
+    the_rooms = re.split("[, \-;,]+", sys.argv[1].strip())
+    the_alert = sys.argv[2]
+    the_message = sys.argv[3]
 
     error = _read_config()
 
@@ -95,7 +91,7 @@ def zabbix2matrixmain():
         token = client.login(username=_config_values[_config_string_username],
                              password=_config_values[_config_string_password])
 
-        for room_id in _config_values[_config_string_rooms]:
+        for room_id in the_rooms:
             the_room = client.join_room(room_id)
             _send_message(the_room, the_alert, the_message)
 
