@@ -1,7 +1,6 @@
 import configparser
-import sys
 import re
-
+import sys
 from pathlib import Path
 
 from matrix_client import errors
@@ -22,7 +21,7 @@ _config_values = {}
 def _read_config() -> str:
     """
 
-    :return: Error (if there'S anything wrong with the configfile or NONE)
+    :return: Error (if there's anything wrong with the configfile or NONE if everyhing is alright)
     :rtype: String
     """
 
@@ -67,7 +66,8 @@ def _send_message(the_room: Room, zabbix_subject: str, zabbix_message: str):
     """
 
     the_room.send_html(
-        "<b>{}</b><br><br>{}".format(zabbix_subject, zabbix_message, "{}\n\n{}").format(zabbix_subject, zabbix_message))
+        "<b>{}</b><br /><br/ >{}".format(zabbix_subject, zabbix_message.replace('\n', '<br />'), "{}\n\n{}").format(
+            zabbix_subject, zabbix_message))
 
 
 def zabbix2matrixmain():
@@ -75,7 +75,7 @@ def zabbix2matrixmain():
         print("Usage: {} <room(s)> <subject> <message>".format(sys.argv[0]))
         exit(1)
 
-    the_rooms = re.split("[, \-;,]+", sys.argv[1].strip())
+    the_rooms = re.split("[, \-;]+", sys.argv[1].strip())
     the_alert = sys.argv[2]
     the_message = sys.argv[3]
 
