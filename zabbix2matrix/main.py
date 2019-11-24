@@ -75,7 +75,7 @@ def zabbix2matrixmain():
         print("Usage: {} <room(s)> <subject> <message>".format(sys.argv[0]))
         exit(1)
 
-    the_rooms = re.split("[, \-;,]+", sys.argv[1].strip())
+    the_rooms = re.split("[, ;,]+", sys.argv[1].strip())
     the_alert = sys.argv[2]
     the_message = sys.argv[3]
 
