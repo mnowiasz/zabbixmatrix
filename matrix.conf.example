@@ -1,0 +1,5 @@
+[matrix]
+#username=@id:server
+#password= <password>
+#url=<homeserver, like https://matrix.org>
+
