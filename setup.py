@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='zabbixmatrix',
-    version='0.0.3',
+    version='0.0.4',
     packages=['zabbix2matrix'],
     url='https://github.com/mnowiasz/zabbixmatrix',
     license='MIT',
