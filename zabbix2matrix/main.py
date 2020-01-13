@@ -72,7 +72,7 @@ async def _send(client: AsyncClient, rooms, subject: str, message: str):
     await client.close()
 
 
-def zabbix2matrixmain():
+async def zabbix2matrixmain():
     if len(sys.argv) != 4:
         print("Usage: {} <room(s)> <subject> <message>".format(sys.argv[0]))
         exit(1)

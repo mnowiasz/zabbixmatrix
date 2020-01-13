@@ -6,7 +6,7 @@ To use it you have to do perform the following steps:
 1. Register a new matrix account (or use an existing one). You can even
 do this by curl (https://www.matrix.org/docs/guides/client-server-api)
 2. Invite the account to the channels (public/private, whatever) where
-you'd like to receive the alers
+you'd like to receive the alerts
 3. Enter your credentials (inkcuding the URL to the homserver where you've
 registered the matrix account) in a file named matrix.conf (see matrix.conf.example).
 This file should go to the zabbix' homedirectory
