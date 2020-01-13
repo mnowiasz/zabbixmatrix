@@ -68,7 +68,9 @@ async def _send(client: AsyncClient, rooms, subject: str, message: str):
     for the_room_id in rooms:
         await client.room_send(room_id=the_room_id, message_type="m.room.message", content={
             "msgtype": "m.text",
-            "body": _format_message(zabbix_subject=subject, zabbix_message=message)})
+            "body":  str.format("{}: {}", subject, message),
+            "format": "org.matrix.custom.html",
+            "formatted_body": _format_message(zabbix_subject=subject, zabbix_message=message)})
 
     await client.close()
 
