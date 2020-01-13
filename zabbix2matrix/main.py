@@ -72,7 +72,7 @@ async def _send(client: AsyncClient, rooms, subject: str, message: str):
     await client.close()
 
 
-async def zabbix2matrixmain():
+def zabbix2matrixmain():
     if len(sys.argv) != 4:
         print("Usage: {} <room(s)> <subject> <message>".format(sys.argv[0]))
         exit(1)
@@ -88,7 +88,7 @@ async def zabbix2matrixmain():
         exit(1)
 
     client = AsyncClient(homeserver=_config_values[_config_string_url], user=_config_values[_config_string_username])
-    await client.login(password=_config_values[_config_string_password])
+    client.login(password=_config_values[_config_string_password])
     asyncio.get_event_loop().run_until_complete(_send(client, the_rooms, the_alert, the_message))
 
 
