@@ -1,11 +1,10 @@
+import asyncio
 import configparser
 import re
 import sys
 from pathlib import Path
 
-from matrix_client import errors
-from matrix_client.client import MatrixClient
-from matrix_client.room import Room
+from nio import AsyncClient
 
 _config_directories = ("/var/lib/zabbix", Path.home(), Path.cwd())
 _config_filename = "matrix.conf"
@@ -50,24 +49,27 @@ def _read_config() -> str:
         return missing_key + " not set!"
 
 
-def _send_message(the_room: Room, zabbix_subject: str, zabbix_message: str):
+def _format_message(zabbix_subject: str, zabbix_message: str) -> str:
     """
-
-    :param the_room: The room the message is being send to
-    :type the_room: Room
-    :param zabbix_subject: Zabbix subject
+    :param zabbix_subject: The alert's subject
     :type zabbix_subject: str
-    :param zabbix_message: Zabbix's message
+    :param zabbix_message: The altert's message
     :type zabbix_message: str
-    :return:
-    :rtype:
-
-    Sends the alerts to the room
+    :return: a (HTTML) formatted message
+    :rtype: str
     """
 
-    the_room.send_html(
-        "<b>{}</b><br /><br/ >{}".format(zabbix_subject, zabbix_message.replace('\n', '<br />'), "{}\n\n{}").format(
-            zabbix_subject, zabbix_message))
+    return "<b>{}</b><br /><br/ >{}".format(zabbix_subject, zabbix_message.replace('\n', '<br />'), "{}\n\n{}").format(
+        zabbix_subject, zabbix_message)
+
+
+async def _send(client: AsyncClient, rooms, subject: str, message: str):
+    for the_room_id in rooms:
+        await client.room_send(room_id=the_room_id, message_type="m.room.message", content={
+            "msgtype": "m.text",
+            "body": _format_message(zabbix_subject=subject, zabbix_message=message)})
+
+    await client.close()
 
 
 def zabbix2matrixmain():
@@ -85,21 +87,9 @@ def zabbix2matrixmain():
         print(error)
         exit(1)
 
-    client = None
-    try:
-        client = MatrixClient(_config_values[_config_string_url])
-        token = client.login(username=_config_values[_config_string_username],
-                             password=_config_values[_config_string_password])
-
-        for room_id in the_rooms:
-            the_room = client.join_room(room_id)
-            _send_message(the_room, the_alert, the_message)
-
-        client.logout()
-        exit(0)
-    except errors.MatrixRequestError as me:
-        print(me.content)
-        exit(1)
+    client = AsyncClient(homeserver=_config_values[_config_string_url], user=_config_values[_config_string_username])
+    await client.login(password=_config_values[_config_string_password])
+    asyncio.get_event_loop().run_until_complete(_send(client, the_rooms, the_alert, the_message))
 
 
 if __name__ == '__main__':
