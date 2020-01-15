@@ -4,7 +4,7 @@ import re
 import sys
 from pathlib import Path
 
-from nio import AsyncClient
+from nio import AsyncClient, responses
 
 _config_directories = ("/var/lib/zabbix", Path.home(), Path.cwd())
 _config_filename = "matrix.conf"
@@ -63,13 +63,16 @@ def _format_message(zabbix_subject: str, zabbix_message: str) -> str:
         zabbix_subject, zabbix_message)
 
 
-async def _send(client: AsyncClient, room, subject: str, message: str):
-
-    await client.room_send(room_id=room, message_type="m.room.message", content={
+async def _send(client: AsyncClient, room: str, subject: str, message: str):
+    response = await client.join(room)
+    if isinstance(response, responses.JoinResponse):
+        await client.room_send(room_id=response.room_id, message_type="m.room.message", content={
             "msgtype": "m.text",
             "body":  str.format("{}: {}", subject, message),
             "format": "org.matrix.custom.html",
             "formatted_body": _format_message(zabbix_subject=subject, zabbix_message=message)})
+    else:
+        print("Cannot join {}".format(room))
 
 
 async def _send_messages(client: AsyncClient, the_rooms:list, subject: str, message: str):
