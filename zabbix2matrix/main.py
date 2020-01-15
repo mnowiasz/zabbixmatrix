@@ -72,6 +72,16 @@ async def _send(client: AsyncClient, room, subject: str, message: str):
             "formatted_body": _format_message(zabbix_subject=subject, zabbix_message=message)})
 
 
+async def _send_messages(client: AsyncClient, the_rooms:list, subject: str, message: str):
+    await client.login(password=_config_values[_config_string_password])
+    try:
+        await asyncio.gather(*[_send(client, the_room, subject, message) for the_room in the_rooms])
+    finally:
+        await client.logout()
+        client.close()
+
+
+
 def zabbix2matrixmain():
     if len(sys.argv) != 4:
         print("Usage: {} <room(s)> <subject> <message>".format(sys.argv[0]))
@@ -88,18 +98,7 @@ def zabbix2matrixmain():
         exit(1)
 
     client = AsyncClient(homeserver=_config_values[_config_string_url], user=_config_values[_config_string_username])
-    client.login(password=_config_values[_config_string_password])
-    loop = asyncio.get_event_loop()
-
-    try:
-        for the_room_id in the_rooms:
-            loop.create_task(_send(client, the_room_id, the_alert, the_message))
-        pending = asyncio.Task.all_tasks()
-        loop.run_until_complete(asyncio.gather(*pending))
-    finally:
-        client.logout()
-        client.close()
-
+    asyncio.get_event_loop().run_until_complete(_send_messages(client, the_rooms, the_alert, the_message))
 
 if __name__ == '__main__':
     zabbix2matrixmain()
