@@ -63,16 +63,13 @@ def _format_message(zabbix_subject: str, zabbix_message: str) -> str:
         zabbix_subject, zabbix_message)
 
 
-async def _send(client: AsyncClient, rooms, subject: str, message: str):
-    await client.login(password=_config_values[_config_string_password])
-    for the_room_id in rooms:
-        await client.room_send(room_id=the_room_id, message_type="m.room.message", content={
+async def _send(client: AsyncClient, room, subject: str, message: str):
+
+    await client.room_send(room_id=room, message_type="m.room.message", content={
             "msgtype": "m.text",
             "body":  str.format("{}: {}", subject, message),
             "format": "org.matrix.custom.html",
             "formatted_body": _format_message(zabbix_subject=subject, zabbix_message=message)})
-
-    await client.close()
 
 
 def zabbix2matrixmain():
@@ -91,7 +88,17 @@ def zabbix2matrixmain():
         exit(1)
 
     client = AsyncClient(homeserver=_config_values[_config_string_url], user=_config_values[_config_string_username])
-    asyncio.get_event_loop().run_until_complete(_send(client, the_rooms, the_alert, the_message))
+    client.login(password=_config_values[_config_string_password])
+    loop = asyncio.get_event_loop()
+
+    try:
+        for the_room_id in the_rooms:
+            loop.create_task(_send(client, the_room_id, the_alert, the_message))
+        pending = asyncio.Task.all_tasks()
+        loop.run_until_complete(asyncio.gather(*pending))
+    finally:
+        client.logout()
+        client.close()
 
 
 if __name__ == '__main__':
