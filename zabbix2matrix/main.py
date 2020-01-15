@@ -78,7 +78,7 @@ async def _send_messages(client: AsyncClient, the_rooms:list, subject: str, mess
         await asyncio.gather(*[_send(client, the_room, subject, message) for the_room in the_rooms])
     finally:
         await client.logout()
-        client.close()
+        await client.close()
 
 
 
